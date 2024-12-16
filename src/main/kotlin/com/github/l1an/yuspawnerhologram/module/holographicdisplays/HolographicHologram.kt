@@ -1,5 +1,7 @@
 package com.github.l1an.yuspawnerhologram.module.holographicdisplays
 
+import com.github.l1an.artisan.lang.LanguageType
+import com.github.l1an.artisan.lang.sendLang
 import com.github.l1an.yuspawnerhologram.internal.compat.hook.HookMythicMobs.getSpawnerManager
 import com.github.l1an.yuspawnerhologram.internal.config.YuSpawnerHologramConfig.config
 import com.github.l1an.yuspawnerhologram.internal.core.mythichologram.HologramEnter
@@ -13,9 +15,7 @@ import me.filoghost.holographicdisplays.api.hologram.Hologram
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.command.CommandSender
-import taboolib.common5.mirrorNow
 import taboolib.module.configuration.Configuration
-import taboolib.platform.util.sendLang
 
 object HolographicHologram {
     // 创建一个 map 用于存储 hologram 和其 name
@@ -27,17 +27,15 @@ object HolographicHologram {
      * @author L1An
      * @since 2023/10/21
      */
-    fun createAllHologramByHD(sender : CommandSender) {
-        mirrorNow("Initialize Holograms") {
-            val keys = getConfigKeys(config, "hologramText")
-            var createdHologramsCount = 0 // 用于跟踪成功创建的 hologram 的数量
+    fun createAllHologramByHD(sender: CommandSender) {
+        val keys = getConfigKeys(config, "hologramText")
+        var createdHologramsCount = 0 // 用于跟踪成功创建的 hologram 的数量
 
-            for (spawnerName in keys) {
-                val hologram = createHologramByHD(spawnerName)
-                if (hologram != null) createdHologramsCount++  // 成功创建hologram，增加计数器
-            }
-            sender.sendLang("holo-refresh-all-success", createdHologramsCount)
+        for (spawnerName in keys) {
+            val hologram = createHologramByHD(spawnerName)
+            if (hologram != null) createdHologramsCount++  // 成功创建hologram，增加计数器
         }
+        sender.sendLang("holo-refresh-all-success", createdHologramsCount, type = LanguageType.Done)
     }
 
     /**
@@ -47,17 +45,17 @@ object HolographicHologram {
      * @author L1An
      * @since 2023/10/21
      */
-    private fun createHologramByHD(name : String, sender : CommandSender = Bukkit.getConsoleSender()) : Hologram? {
+    private fun createHologramByHD(name: String, sender: CommandSender = Bukkit.getConsoleSender()): Hologram? {
         if (holograms.containsKey(name)) {
             // 名字已存在
-            sender.sendLang("spawner-already-exist", name)
+            sender.sendLang("spawner-already-exist", name, type = LanguageType.Error)
             return null
         }
         val spawner = getSpawnerManager(name)
 
         // 若 spawner 不存在则返回 null
         if (spawner == null) {
-            sender.sendLang("no-spawner", name)
+            sender.sendLang("no-spawner", name, type = LanguageType.Error)
             return null
         }
 
@@ -85,7 +83,7 @@ object HolographicHologram {
      * @author L1An
      * @since 2023/10/21
      */
-    private fun getHologram(name : String) : Hologram? {
+    private fun getHologram(name: String): Hologram? {
         return holograms[name]
     }
 
@@ -96,7 +94,7 @@ object HolographicHologram {
      * @author L1An
      * @since 2023/10/21
      */
-    private fun deleteHologram(name : String) {
+    private fun deleteHologram(name: String) {
         getHologram(name)?.let {
             it.delete()
             holograms.remove(name)
@@ -110,15 +108,13 @@ object HolographicHologram {
      * @author L1An
      * @since 2023/10/22
      */
-    fun refreshHologramByHD(name : String, sender : CommandSender) {
-        mirrorNow("Refresh Hologram") {
-            deleteHologram(name)
-            val hologram = createHologramByHD(name, sender)
-            if (hologram != null) {
-                sender.sendLang("holo-refresh-success", name)
-            } else {
-                sender.sendLang("holo-refresh-fail", name)
-            }
+    fun refreshHologramByHD(name: String, sender: CommandSender) {
+        deleteHologram(name)
+        val hologram = createHologramByHD(name, sender)
+        if (hologram != null) {
+            sender.sendLang("holo-refresh-success", name, type = LanguageType.Done)
+        } else {
+            sender.sendLang("holo-refresh-fail", name, type = LanguageType.Error)
         }
     }
 
@@ -128,7 +124,7 @@ object HolographicHologram {
      * @author L1An
      * @since 2023/10/21
      */
-    private fun refreshHologramTextByHD(name : String) : Boolean {
+    private fun refreshHologramTextByHD(name: String): Boolean {
         val spawner = getSpawnerManager(name)!!
         val texts = getHologramText(
             config,
@@ -168,11 +164,11 @@ object HolographicHologram {
      * @since 2023/10/21
      */
     private fun getHologramText(
-        config : Configuration,
-        key : String,
-        mobName : String,
-        warmupSeconds : Int
-    ) : List<String> {
+        config: Configuration,
+        key: String,
+        mobName: String,
+        warmupSeconds: Int
+    ): List<String> {
         return getHologramTextWithInfo(config, key, mobName, warmupSeconds).map { it.text }
     }
 
@@ -187,13 +183,13 @@ object HolographicHologram {
      * @return 返回 key 中的值，为<HologramTextContainer>列表形式，同时返回每行的类型(HologramType)，用于判断是否需要刷新 %cooldown% 或 %warmup% 的占位符
      */
     fun getHologramTextWithInfo(
-        config : Configuration,
-        key : String,
-        mobName : String,
-        warmupSeconds : Int
-    ) : List<HologramTextContainer> {
+        config: Configuration,
+        key: String,
+        mobName: String,
+        warmupSeconds: Int
+    ): List<HologramTextContainer> {
         val warmup = secondToFormat(config, warmupSeconds, "durationFormat")
-        val texts = config.getStringList("hologramText.$key") ?: listOf()
+        val texts = config.getStringList("hologramText.$key")
 
         return texts.map {
             val modifiedText = it.replace("%name%", mobName).replace("&", "§")

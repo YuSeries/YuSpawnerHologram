@@ -1,5 +1,7 @@
 package com.github.l1an.yuspawnerhologram.module.decentholograms
 
+import com.github.l1an.artisan.lang.LanguageType
+import com.github.l1an.artisan.lang.sendLang
 import com.github.l1an.yuspawnerhologram.internal.compat.hook.HookMythicMobs.getSpawnerManager
 import com.github.l1an.yuspawnerhologram.internal.config.YuSpawnerHologramConfig.config
 import com.github.l1an.yuspawnerhologram.internal.core.HologramUpdateSubmit.activeMsg
@@ -10,9 +12,7 @@ import eu.decentsoftware.holograms.api.DHAPI
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.command.CommandSender
-import taboolib.common5.mirrorNow
 import taboolib.module.configuration.Configuration
-import taboolib.platform.util.sendLang
 
 /**
  * 处理为 DecentHolograms 支持的 Hologram
@@ -24,17 +24,15 @@ object DecentHologram {
      * 从配置文件中创建所有 hologram
      * @return 创建出 hologram 并返回信息
      */
-    fun createAllHologramByDH(sender : CommandSender) {
-        mirrorNow("Initialize Holograms") {
-            val keys = getConfigKeys(config, "hologramText")
-            var createdHologramsCount = 0 // 用于跟踪成功创建的hologram的数量
+    fun createAllHologramByDH(sender: CommandSender) {
+        val keys = getConfigKeys(config, "hologramText")
+        var createdHologramsCount = 0 // 用于跟踪成功创建的hologram的数量
 
-            for (spawnerName in keys) {
-                createHologramByDH(spawnerName)
-                createdHologramsCount++
-            }
-            sender.sendLang("holo-refresh-all-success", createdHologramsCount)
+        for (spawnerName in keys) {
+            createHologramByDH(spawnerName)
+            createdHologramsCount++
         }
+        sender.sendLang("holo-refresh-all-success", createdHologramsCount, type = LanguageType.Done)
     }
 
     /**
@@ -42,15 +40,16 @@ object DecentHologram {
      * @param spawnerName hologram 的名字
      * @return 创建出 hologram
      */
-    private fun createHologramByDH(spawnerName : String, sender : CommandSender = Bukkit.getConsoleSender()) {
+    private fun createHologramByDH(spawnerName: String, sender: CommandSender = Bukkit.getConsoleSender()) {
         val spawner = getSpawnerManager(spawnerName)
         // 若 spawner 不存在则返回 null
         if (spawner == null) {
-            sender.sendLang("no-spawner", spawnerName)
+            sender.sendLang("no-spawner", spawnerName, type = LanguageType.Error)
             return
         }
 
-        val location = Location(Bukkit.getWorld(spawner.worldName), spawner.location.x, spawner.location.y + 3, spawner.location.z)
+        val location =
+            Location(Bukkit.getWorld(spawner.worldName), spawner.location.x, spawner.location.y + 3, spawner.location.z)
         val texts = getHologramTextForDH(
             config,
             spawnerName,
@@ -65,17 +64,15 @@ object DecentHologram {
      * @param spawnerName hologram 的名字
      * @return 刷新 hologram 并返回信息
      */
-    fun refreshHologramByDH(spawnerName : String, sender : CommandSender = Bukkit.getConsoleSender()) {
-        mirrorNow("Refresh Hologram") {
-            val hologram = DHAPI.getHologram(spawnerName)
-            if (hologram != null) {
-                hologram.delete()
-                createHologramByDH(spawnerName, sender)
-                sender.sendLang("holo-refresh-success", spawnerName)
-            } else {
-                createHologramByDH(spawnerName, sender)
-                sender.sendLang("holo-refresh-fail", spawnerName)
-            }
+    fun refreshHologramByDH(spawnerName: String, sender: CommandSender = Bukkit.getConsoleSender()) {
+        val hologram = DHAPI.getHologram(spawnerName)
+        if (hologram != null) {
+            hologram.delete()
+            createHologramByDH(spawnerName, sender)
+            sender.sendLang("holo-refresh-success", spawnerName, type = LanguageType.Done)
+        } else {
+            createHologramByDH(spawnerName, sender)
+            sender.sendLang("holo-refresh-fail", spawnerName, type = LanguageType.Error)
         }
     }
 
@@ -106,13 +103,13 @@ object DecentHologram {
      * @return 返回 hologram 的文本
      */
     private fun getHologramTextForDH(
-        config : Configuration,
-        key : String,
-        mobName : String,
-        warmupSeconds : Int
-    ) : List<String> {
+        config: Configuration,
+        key: String,
+        mobName: String,
+        warmupSeconds: Int
+    ): List<String> {
         val warmup = secondToFormat(config, warmupSeconds, "durationFormat")
-        val texts = config.getStringList("hologramText.$key") ?: listOf()
+        val texts = config.getStringList("hologramText.$key")
         val spawner = getSpawnerManager(key)
 
         return texts.map {

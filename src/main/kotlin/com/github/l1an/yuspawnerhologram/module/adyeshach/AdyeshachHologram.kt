@@ -1,5 +1,7 @@
 package com.github.l1an.yuspawnerhologram.module.adyeshach
 
+import com.github.l1an.artisan.lang.LanguageType
+import com.github.l1an.artisan.lang.sendLang
 import com.github.l1an.yuspawnerhologram.internal.compat.hook.HookMythicMobs.getSpawnerManager
 import com.github.l1an.yuspawnerhologram.internal.config.YuSpawnerHologramConfig.config
 import com.github.l1an.yuspawnerhologram.internal.core.HologramUpdateSubmit
@@ -11,9 +13,7 @@ import ink.ptms.adyeshach.core.AdyeshachHologram
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.command.CommandSender
-import taboolib.common5.mirrorNow
 import taboolib.module.configuration.Configuration
-import taboolib.platform.util.sendLang
 
 /**
  * 处理为 Adyeshach 支持的 Hologram
@@ -29,17 +29,15 @@ object AdyeshachHologram {
      * 从配置文件中创建所有 hologram
      * @return 创建出 hologram 并将其存入 Map : holograms 中
      */
-    fun createAllHologramByADY(sender : CommandSender) {
-        mirrorNow("Initialize Holograms") {
-            val keys = getConfigKeys(config, "hologramText")
-            var createdHologramCount = 0 // 用于跟踪成功创建的 hologram 的数量
+    fun createAllHologramByADY(sender: CommandSender) {
+        val keys = getConfigKeys(config, "hologramText")
+        var createdHologramCount = 0 // 用于跟踪成功创建的 hologram 的数量
 
-            for (spawnerName in keys) {
-                val hologram = createHologramByADY(spawnerName, sender)
-                if (hologram != null) createdHologramCount++
-            }
-            sender.sendLang("holo-refresh-all-success", createdHologramCount)
+        for (spawnerName in keys) {
+            val hologram = createHologramByADY(spawnerName, sender)
+            if (hologram != null) createdHologramCount++
         }
+        sender.sendLang("holo-refresh-all-success", createdHologramCount, type = LanguageType.Done)
     }
 
     /**
@@ -47,19 +45,24 @@ object AdyeshachHologram {
      * @param name hologram 的名字
      * @return 创建出 hologram 并将其存入 Map : hologramsByName 中
      */
-    private fun createHologramByADY(name : String, sender : CommandSender = Bukkit.getConsoleSender(), tip : Boolean = true) : AdyeshachHologram? {
+    private fun createHologramByADY(
+        name: String,
+        sender: CommandSender = Bukkit.getConsoleSender(),
+        tip: Boolean = true
+    ): AdyeshachHologram? {
         if (holograms.containsKey(name) && tip) {
-            sender.sendLang("spawner-already-exist", name)
+            sender.sendLang("spawner-already-exist", name, type = LanguageType.Error)
             return null
         }
         val spawner = getSpawnerManager(name)
 
         if (spawner == null) {
-            sender.sendLang("no-spawner", name)
+            sender.sendLang("no-spawner", name, type = LanguageType.Error)
             return null
         }
 
-        val location = Location(Bukkit.getWorld(spawner.worldName), spawner.location.x, spawner.location.y + 2, spawner.location.z)
+        val location =
+            Location(Bukkit.getWorld(spawner.worldName), spawner.location.x, spawner.location.y + 2, spawner.location.z)
         val texts = getHologramTextForADY(
             config,
             name,
@@ -78,17 +81,19 @@ object AdyeshachHologram {
      * @param spawnerName hologram 的名字
      * @return 刷新 hologram 并返回信息
      */
-    fun refreshHologramByADY(spawnerName : String, sender : CommandSender = Bukkit.getConsoleSender(), tip : Boolean = false) {
-        mirrorNow("Refresh Hologram") {
-            val hologram = holograms[spawnerName]
-            if (hologram != null) {
-                hologram.remove()
-                createHologramByADY(spawnerName, sender, tip)
-                sender.sendLang("holo-refresh-success", spawnerName)
-            } else {
-                createHologramByADY(spawnerName, sender, tip)
-                sender.sendLang("holo-refresh-fail", spawnerName)
-            }
+    fun refreshHologramByADY(
+        spawnerName: String,
+        sender: CommandSender = Bukkit.getConsoleSender(),
+        tip: Boolean = false
+    ) {
+        val hologram = holograms[spawnerName]
+        if (hologram != null) {
+            hologram.remove()
+            createHologramByADY(spawnerName, sender, tip)
+            sender.sendLang("holo-refresh-success", spawnerName, type = LanguageType.Done)
+        } else {
+            createHologramByADY(spawnerName, sender, tip)
+            sender.sendLang("holo-refresh-fail", spawnerName, type = LanguageType.Error)
         }
     }
 
@@ -96,7 +101,7 @@ object AdyeshachHologram {
      * 刷新 hologram 的内容
      * @param spawnerName hologram 的名字
      */
-    fun refreshHologramTextByADY(spawnerName : String) {
+    fun refreshHologramTextByADY(spawnerName: String) {
         val hologram = holograms[spawnerName]
         val spawner = getSpawnerManager(spawnerName) ?: return
         val texts = getHologramTextForADY(
@@ -117,13 +122,13 @@ object AdyeshachHologram {
      * @return 返回 hologram 的文本
      */
     private fun getHologramTextForADY(
-        config : Configuration,
-        key : String,
-        mobName : String,
-        warmupSeconds : Int
-    ) : List<String> {
+        config: Configuration,
+        key: String,
+        mobName: String,
+        warmupSeconds: Int
+    ): List<String> {
         val warmup = TimeUtils.secondToFormat(config, warmupSeconds, "durationFormat")
-        val texts = config.getStringList("hologramText.$key") ?: listOf()
+        val texts = config.getStringList("hologramText.$key")
         val spawner = getSpawnerManager(key)
 
         return texts.map {

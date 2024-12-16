@@ -1,5 +1,7 @@
 package com.github.l1an.yuspawnerhologram.internal.command.subcommand
 
+import com.github.l1an.artisan.lang.LanguageType
+import com.github.l1an.artisan.lang.sendLang
 import com.github.l1an.yuspawnerhologram.internal.config.YuSpawnerHologramConfig.config
 import com.github.l1an.yuspawnerhologram.module.adyeshach.AdyeshachHologram.refreshHologramByADY
 import com.github.l1an.yuspawnerhologram.module.decentholograms.DecentHologram.refreshHologramByDH
@@ -11,7 +13,6 @@ import com.github.l1an.yuspawnerhologram.util.Utils
 import org.bukkit.command.CommandSender
 import taboolib.common.platform.command.subCommand
 import taboolib.common.platform.command.suggest
-import taboolib.platform.util.sendLang
 
 val CommandRefresh = subCommand {
     execute<CommandSender> { sender, _, _ ->
@@ -21,7 +22,7 @@ val CommandRefresh = subCommand {
                 adyeshach != null -> refreshHologramByADY(spawnerName, sender)
                 decentHolograms != null -> refreshHologramByDH(spawnerName, sender)
                 holographicDisplays != null -> refreshHologramByHD(spawnerName, sender)
-                else -> sender.sendLang("dependency-not-found")
+                else -> sender.sendLang("dependency-not-found", type = LanguageType.Error)
             }
         }
     }
@@ -35,7 +36,7 @@ val CommandRefresh = subCommand {
                 adyeshach != null -> refreshHologramByADY(spawnerName, sender)
                 decentHolograms != null -> refreshHologramByDH(spawnerName, sender)
                 holographicDisplays != null -> refreshHologramByHD(spawnerName, sender)
-                else -> sender.sendLang("dependency-not-found")
+                else -> sender.sendLang("dependency-not-found", type = LanguageType.Error)
             }
         }
     }

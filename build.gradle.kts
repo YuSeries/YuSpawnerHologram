@@ -1,44 +1,40 @@
+import io.izzel.taboolib.gradle.*
+
 plugins {
-    `java-library`
-    `maven-publish`
-    id("io.izzel.taboolib") version "1.60"
-    id("org.jetbrains.kotlin.jvm") version "1.5.10"
+    java
+    id("io.izzel.taboolib") version "2.0.22"
+    id("org.jetbrains.kotlin.jvm") version "1.9.22"
 }
 
 taboolib {
+    env {
+        install(
+            Basic, I18n, Metrics, Bukkit, CommandHelper, BukkitHook, BukkitUtil
+        )
+    }
     description {
-        name(rootProject.name)
+        name = rootProject.name
         desc("Visualize your spawner respawn time!")
-        links {
-            name("homepage").url("https://github.com/L1-An")
-        }
         contributors {
             name("L1An")
         }
         dependencies {
-            name("MythicMobs").with("bukkit")
-            name("PlaceholderAPI").with("bukkit").optional(true)
-            name("HolographicDisplays").with("bukkit").optional(true)
-            name("DecentHolograms").with("bukkit").optional(true)
-            name("Adyeshach").with("bukkit").optional(true)
+            name("MythicMobs")
+            name("PlaceholderAPI").optional(true)
+            name("HolographicDisplays").optional(true)
+            name("DecentHolograms").optional(true)
+            name("Adyeshach").optional(true)
         }
     }
-    install("common")
-    install("common-5")
-    install("module-chat")
-    install("module-configuration")
-    install("module-lang")
-    install("module-metrics")
-    install("platform-bukkit")
-    install("expansion-command-helper")
-    classifier = null
-    version = "6.0.12-69"
+    version { taboolib = "6.2.1-f095116" }
+    relocate("com.github.l1an.artisan", "${project.group}.artisan")
+    relocate("ink.ptms.um", "${project.group}.um")
 }
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven(url = "https://mvn.lumine.io/repository/maven-public/")
-    maven { url = uri("https://repo.tabooproject.org/repository/releases/") } // TabooLib
     maven { url = uri("https://repo.codemc.io/repository/maven-public/") } // HolographicDisplays
     maven { url = uri("https://jitpack.io") } // DecentHolograms
 }
@@ -54,6 +50,8 @@ dependencies {
     compileOnly("ink.ptms.adyeshach:all:2.0.0-snapshot-1")
     compileOnly("me.filoghost.holographicdisplays:holographicdisplays-api:3.0.0")
     compileOnly("com.github.decentsoftware-eu:decentholograms:2.8.4")
+    taboo("ink.ptms:um:1.1.2")
+    taboo("com.github.l1an.artisan:Artisan:1.0.2")
 }
 
 tasks.withType<JavaCompile> {
@@ -68,27 +66,19 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 }
 
 configure<JavaPluginConvention> {
-    sourceCompatibility = JavaVersion.VERSION_14
+    sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-publishing {
-    repositories {
-        maven {
-            url = uri("https://repo.tabooproject.org/repository/releases")
-            credentials {
-                username = project.findProperty("taboolibUsername").toString()
-                password = project.findProperty("taboolibPassword").toString()
-            }
-            authentication {
-                create<BasicAuthentication>("basic")
-            }
+kotlin {
+    sourceSets.all {
+        languageSettings {
+            languageVersion = "2.0"
         }
     }
-    publications {
-        create<MavenPublication>("library") {
-            from(components["java"])
-            groupId = project.group.toString()
-        }
-    }
+}
+
+tasks.withType<Jar> {
+    destinationDirectory.set(file("/Users/yuxin/minecraft/servers/1.20.4Test/plugins"))
+    //destinationDirectory.set(file("$projectDir/build-jar"))
 }
